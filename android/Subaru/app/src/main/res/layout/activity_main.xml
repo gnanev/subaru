@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    tools:context="com.gran.subaru.MainActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="242dp"
+            android:layout_height="match_parent"
+            android:layout_margin="22dp"
+            android:background="@color/adc_background"
+            android:padding="10dp"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:layout_alignParentRight="true" />
+
+        <RelativeLayout
+            android:id="@+id/viewConfig"
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginStart="22dp"
+            android:layout_margin="22dp"
+            android:layout_alignParentTop="false"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:background="@mipmap/frame">
+
+            <TextView
+                android:id="@+id/textView0"
+                android:layout_width="399dp"
+                android:layout_height="wrap_content"
+                android:text="Dimmer"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="24sp" />
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginStart="30dp"
+                android:text="ADC min"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignTop="@+id/textView1"
+                android:text="ADC max"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="30dp"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="140dp"
+                android:layout_marginStart="30dp"
+                android:text="ILL min"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignTop="@+id/textView3"
+                android:text="ILL max"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="40dp"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextAdcMin"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView1"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="40dp"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextAdcMax"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView1"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="30dp"
+                android:textAlignment="center"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextILLMin"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView3"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="40dp"
+                android:textAlignment="center"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextILLMax"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView3"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="30dp"
+                android:textAlignment="center"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <ImageButton
+                android:id="@+id/btnSaveDimmer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/editTextILLMax"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="60dp"
+                android:background="@null"
+                android:tint="@null"
+                android:src="@drawable/selector_btn_save"
+                android:text="" />
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/viewConfig2"
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginStart="390dp"
+            android:layout_alignParentTop="false"
+            app:layout_constraintLeft_toLeftOf="@+id/viewConfig"
+            android:background="@mipmap/frame">
+
+            <TextView
+                android:id="@+id/textView_0"
+                android:layout_width="399dp"
+                android:layout_height="wrap_content"
+                android:text="Configuration"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="24sp" />
+
+            <TextView
+                android:id="@+id/textView_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginStart="30dp"
+                android:text="Batt min"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textView_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignTop="@+id/textView_1"
+                android:text="Cut-off"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="30dp"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textView_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="140dp"
+                android:layout_marginStart="30dp"
+                android:text="HL On"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textView_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignTop="@+id/textView_3"
+                android:text="HL Off"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="40dp"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextBattMin"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView_1"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="40dp"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextCutoff"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView_1"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="30dp"
+                android:textAlignment="center"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextHLon"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView_3"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="40dp"
+                android:textAlignment="center"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextHLoff"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView_3"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="30dp"
+                android:textAlignment="center"
+                android:background="@color/adc_background"
+                android:maxLines="1"
+                android:inputType="numberDecimal"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <ImageButton
+                android:id="@+id/btnSaveConfig"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/editTextHLoff"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="60dp"
+                android:background="@null"
+                android:tint="@null"
+                android:src="@drawable/selector_btn_save"
+                android:text="" />
+        </RelativeLayout>
+
+        <ImageButton
+            android:id="@+id/btnLock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="32dp"
+            android:layout_below="@+id/viewConfig"
+            android:background="@null"
+            android:tint="@null"
+            android:text="" />
+
+        <ImageButton
+            android:id="@+id/btnChangePass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="220dp"
+            android:layout_below="@+id/viewConfig"
+            android:background="@null"
+            android:tint="@null"
+            android:src="@drawable/selector_btn_change_pass"
+            android:text="" />
+
+        <ImageButton
+            android:id="@+id/btnUnlock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="400dp"
+            android:layout_below="@+id/viewConfig"
+            android:background="@null"
+            android:tint="@null"
+            android:text="" />
+
+        <ImageButton
+            android:id="@+id/btnDrl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="588dp"
+            android:layout_below="@+id/viewConfig"
+            android:background="@null"
+            android:tint="@null"
+            android:text="" />
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>
