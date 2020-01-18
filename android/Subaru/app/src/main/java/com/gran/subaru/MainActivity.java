@@ -86,6 +86,13 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
 
+        Intent intent = getIntent();
+        int i = intent.getIntExtra("FromWidget", 0);
+
+        if (i == 42) {
+            moveTaskToBack(true);
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -440,10 +447,11 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
 
         int dimm = (int)((float)val * mDimmerFraction);
         dimm += mILLMin;
-        int brightness = (int)(val * (float)mBrightnessFraction);
 
-        setBrightness(brightness);
         sendMessageToService(DimmerService.MSG_SET_ALPHA, 255-dimm);
+
+//        int brightness = (int)(val * (float)mBrightnessFraction);
+//        setBrightness(brightness);
     }
 
     void loadIll(){

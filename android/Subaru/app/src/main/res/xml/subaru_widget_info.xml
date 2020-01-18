@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialKeyguardLayout="@layout/subaru_widget"
+    android:initialLayout="@layout/subaru_widget"
+    android:minHeight="110dp"
+    android:minWidth="180dp"
+    android:previewImage="@drawable/subaru_autorun"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen">
+</appwidget-provider>
