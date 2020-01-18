@@ -232,7 +232,7 @@ public class UsbComm implements IComm{
         @Override
         public void run() {
             mReadThreadRunning = true;
-            byte[] buffer = new byte[30];
+            byte[] buffer = new byte[1024];
 
             try {
                 while (mSerialPortConnected) {
@@ -250,6 +250,7 @@ public class UsbComm implements IComm{
                 }
             }
             catch (Exception e) {
+                e.printStackTrace();
             }
 
             mReadThreadRunning = false;

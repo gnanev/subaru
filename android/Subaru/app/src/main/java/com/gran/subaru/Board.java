@@ -165,12 +165,13 @@ public class Board implements IDataReceiver {
     public void onDeviceReady() {
         mDeviceValidated = false;
 
-        getConfig(); // Validate device
-
         new Thread(new Runnable() {
             @Override
             public void run() {
             try {
+                Thread.sleep(1000); // needed for usb comm to settle
+                getConfig(); // Validate device
+
                 Thread.sleep(2000);
 
                 // if device is not validated for 2 sec
