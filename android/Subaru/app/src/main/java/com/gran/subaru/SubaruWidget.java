@@ -39,8 +39,6 @@ public class SubaruWidget extends AppWidgetProvider {
     }
 
     void runSubaruApp(final Context context) {
-        Log.d("xxx", "runSubaruApp");
-
         new Thread(new Runnable() {
             @Override
             public void run() {

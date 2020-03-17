@@ -84,10 +84,7 @@ public class Protocol implements ICommReceiver{
     }
 
     private void receiveByte(byte bb) {
-
         int b = bb & 0xFF; // fucking java
-
-        //Log.d("DATA", ""+b);
 
         switch (mReceiveStep) {
             case 0: // data frame start
@@ -178,8 +175,8 @@ public class Protocol implements ICommReceiver{
     }
 
     @Override
-    public void onReceive(byte[] buff) {
-        for(int i=0; i<buff.length; i++) {
+    public void onReceive(byte[] buff, int len) {
+        for(int i=0; i<len; i++) {
             receiveByte(buff[i]);
         }
     }

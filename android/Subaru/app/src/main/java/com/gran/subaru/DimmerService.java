@@ -68,28 +68,6 @@ public class DimmerService extends Service {
         WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         wm.addView(mDimmerView, params);
-
-//        ImageButton mBtnLock;
-//        mBtnLock = new ImageButton(getApplicationContext());
-//        mBtnLock.setBackgroundResource(R.drawable.selector_btn_locked);
-//
-//
-//        WindowManager.LayoutParams params2 = new WindowManager.LayoutParams(
-//                160,
-//                160,
-//                LAYOUT_FLAG, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-//                PixelFormat.TRANSLUCENT);
-//
-//        params.gravity = Gravity.LEFT | Gravity.TOP;
-//
-//        wm.addView(mBtnLock, params2);
-
-//        mBtnLock.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Log.d("xxx", "xxxxx");
-//            }
-//        });
     }
 
     @Override

@@ -5,7 +5,7 @@ package com.gran.subaru;
  */
 
 public interface ICommReceiver {
-    void onReceive(byte[] buff);
+    void onReceive(byte[] buff, int len);
     void onDeviceReady();
     void onDeviceNotFound();
 }

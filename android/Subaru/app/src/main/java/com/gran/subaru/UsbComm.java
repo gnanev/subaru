@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -163,10 +164,7 @@ public class UsbComm implements IComm{
                 mReceiver.onDeviceReady();
             }
         } else {
-            // Serial port could not be opened, maybe an I/O error or if CDC driver was chosen, it does not really fit
-            // Send an Intent to Main Activity
-            boolean b = mSerialPort instanceof CDCSerialDevice;
-            showToast("mSerialPort instanceof CDCSerialDevice = " + b);
+            showToast("mSerialPort is null");
         }
     }
 
@@ -243,7 +241,7 @@ public class UsbComm implements IComm{
                         if (n > 0) {
                             byte[] received = new byte[n];
                             System.arraycopy(buffer, 0, received, 0, n);
-                            mReceiver.onReceive(buffer);
+                            mReceiver.onReceive(buffer, n);
                             //mHandler.obtainMessage(SYNC_READ, received).sendToTarget();
                         }
                     //}

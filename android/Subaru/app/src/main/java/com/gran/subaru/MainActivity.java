@@ -1,12 +1,16 @@
 package com.gran.subaru;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.drm.DrmStore;
+import android.hardware.usb.UsbManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -37,7 +41,7 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     private final static int ADC_THROTTLE = 1;
     private final static int ADC_BATT     = 2;
 
-    private final static int ADC_SUN_OVERSAMPLE = 10;
+    private final static int ADC_SUN_OVERSAMPLE = 2;
 
     private final static float V_FRACTION = 0.082f;
 
@@ -51,6 +55,7 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     private ImageButton mBtnChangePass;
     private ImageButton mBtnRemoveProtection;
     private ImageButton mBtnDRL;
+    private ImageButton mBtnDimmer;
 
     private EditText mEditTextAdcMin;
     private EditText mEditTextAdcMax;
@@ -79,17 +84,29 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
 
     private boolean mIsDrlOn = false;
 
+    private boolean mIsDimmerOn = true;
+
     private long mSunAdcSum = 0;
     private int mSunAdcSamples = 0;
+
+    BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
 
+        IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        registerReceiver(mUsbReceiver, filter);
+
         Intent intent = getIntent();
         int i = intent.getIntExtra("FromWidget", 0);
+        String action = intent.getAction();
 
-        if (i == 42) {
+        if ((i == 42) || ((action != null) && action.equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))) {
             moveTaskToBack(true);
         }
 
@@ -167,6 +184,14 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
             }
         });
 
+        mBtnDimmer = (ImageButton)findViewById(R.id.btnDimmer);
+        mBtnDimmer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onChangeDimmer();
+            }
+        });
+
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         Init();
@@ -216,19 +241,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         {
             InitDimmer();
         }
-
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            if (Settings.System.canWrite(this)) {
-//            }
-//            else {
-//                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
-//                intent.setData(Uri.parse("package:" + getPackageName()));
-//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                startActivity(intent);
-//            }
-//        }
-
 
         loadIll();
         InitBoard();
@@ -367,6 +379,7 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     void refreshButtons() {
         mBtnLock.setBackgroundResource(mIsLocked ? R.drawable.selector_btn_locked : R.drawable.selector_btn_unlocked);
         mBtnDRL.setBackgroundResource(mIsDrlOn ? R.drawable.selector_btn_drl_on : R.drawable.selector_btn_drl);
+        mBtnDimmer.setBackgroundResource(mIsDimmerOn ? R.drawable.selector_btn_dimmer : R.drawable.selector_btn_dimmer_off);
         mBtnChangePass.setVisibility(mIsLocked ? View.GONE : View.VISIBLE);
         mBtnRemoveProtection.setVisibility(mIsLocked ? View.GONE : View.VISIBLE);
         if (mBoard.getDeviceConfig().protectionEnabled == 0)
@@ -394,6 +407,15 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     void onSetDrl() {
         mIsDrlOn = !mIsDrlOn;
         mBoard.setDrl(mIsDrlOn);
+        refreshButtons();
+    }
+
+    void onChangeDimmer() {
+        mIsDimmerOn = !mIsDimmerOn;
+        SharedPreferences.Editor e = getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE).edit();
+        e.putBoolean("mIsDimmerOn", mIsDimmerOn);
+        e.apply();
+        e.commit();
         refreshButtons();
     }
 
@@ -425,28 +447,30 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         if (!mDimmerEnabled)
             return;
 
-        if (val <= mAdcMin) {
-            val = mAdcMin;
-        }
-        else if (val >= mAdcMax) {
-            val = mAdcMax;
-        }
+        int dimm = 255;
 
-        val = val - mAdcMin;
+        if (mIsDimmerOn) {
+            if (val <= mAdcMin) {
+                val = mAdcMin;
+            } else if (val >= mAdcMax) {
+                val = mAdcMax;
+            }
 
-        mSunAdcSum += val;
+            val = val - mAdcMin;
 
-        if (++mSunAdcSamples == ADC_SUN_OVERSAMPLE) {
-            val = (int)(mSunAdcSum / mSunAdcSamples);
-            mSunAdcSamples = 0;
-            mSunAdcSum = 0;
+            mSunAdcSum += val;
+
+            if (++mSunAdcSamples == ADC_SUN_OVERSAMPLE) {
+                val = (int) (mSunAdcSum / mSunAdcSamples);
+                mSunAdcSamples = 0;
+                mSunAdcSum = 0;
+            } else {
+                return;
+            }
+
+            dimm = (int) ((float) val * mDimmerFraction);
+            dimm += mILLMin;
         }
-        else {
-            return;
-        }
-
-        int dimm = (int)((float)val * mDimmerFraction);
-        dimm += mILLMin;
 
         sendMessageToService(DimmerService.MSG_SET_ALPHA, 255-dimm);
 
@@ -460,6 +484,8 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         mAdcMax = sp.getInt("mAdcMax", 0);
         mILLMin = sp.getInt("mILLMin", 0);
         mILLMax = sp.getInt("mILLMax", 0);
+
+        mIsDimmerOn = sp.getBoolean("mIsDimmerOn", true);
 
         mEditTextAdcMin.setText(Integer.toString(mAdcMin));
         mEditTextAdcMax.setText(Integer.toString(mAdcMax));

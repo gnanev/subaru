@@ -36,6 +36,8 @@ public class Board implements IDataReceiver {
     public static final int CMD_SET_LOCK = 18;
     public static final int CMD_SET_DRL = 19;
 
+    public static final int VALIDATION_RETRY_COUNT = 5;
+
     private Protocol mProtocol;
     private UsbComm mComm;
     private Context mContext;
@@ -108,6 +110,10 @@ public class Board implements IDataReceiver {
         mComm.Connect();
     }
 
+    void Reconnect() {
+        mComm.Reconnect();
+    }
+
     public void Kill() {
         mIsRunning = false;
     }
@@ -159,6 +165,18 @@ public class Board implements IDataReceiver {
                 }
             }
         }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                    reconnectorProc();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     @Override
@@ -169,12 +187,17 @@ public class Board implements IDataReceiver {
             @Override
             public void run() {
             try {
-                Thread.sleep(1000); // needed for usb comm to settle
-                getConfig(); // Validate device
+                Thread.sleep(2000); // needed for usb comm to settle
 
-                Thread.sleep(2000);
+                // Validate device
+                for(int i=0; i<VALIDATION_RETRY_COUNT; i++) {
+                    getConfig();
+                    Thread.sleep(1000);
+                    if (mDeviceValidated)
+                        break;
+                }
 
-                // if device is not validated for 2 sec
+                // if device is not validated for 5 sec
                 // search for another one
                 if (!mDeviceValidated) {
                     String deviceToIgnore = mComm.getConnectedDevice();
@@ -186,7 +209,7 @@ public class Board implements IDataReceiver {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            mEventsReceiver.onDeviceReady();
+                        mEventsReceiver.onDeviceReady();
                         }
                     });
                 }
@@ -212,7 +235,7 @@ public class Board implements IDataReceiver {
             h.process(df);
     }
 
-    public void commProc() {
+    void commProc() {
         if (!mIsRunning)
             return;
 
@@ -225,7 +248,7 @@ public class Board implements IDataReceiver {
         }
     }
 
-    public void monitoringProc() {
+    void monitoringProc() {
         if (!mIsRunning)
             return;
 
@@ -234,6 +257,18 @@ public class Board implements IDataReceiver {
 
         if (mCurrentCommand == mCommands.size())
             mCurrentCommand = 0;
+    }
+
+    void reconnectorProc()
+    {
+        if (!mIsRunning) {
+            try {
+                Thread.sleep(3000);
+                Reconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void sendCmd(Runnable r) {
