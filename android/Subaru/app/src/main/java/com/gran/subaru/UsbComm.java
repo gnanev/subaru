@@ -37,7 +37,6 @@ public class UsbComm implements IComm{
     private UsbDevice mUsbDevice;
     private UsbSerialDevice mSerialPort;
     private UsbDeviceConnection mConnection;
-    private HashSet<String> mInvalidDevices = new HashSet<String>();
     private String mDeviceToConnect = "";
     private boolean mSerialPortConnected = false;
     private boolean mReadThreadRunning = false;
@@ -111,9 +110,6 @@ public class UsbComm implements IComm{
                 String productName = mUsbDevice.getProductName();
 
                 if (!mDeviceToConnect.isEmpty() && !productName.equals(mDeviceToConnect))
-                    continue;
-
-                if (mInvalidDevices.contains(mUsbDevice.getDeviceName()))
                     continue;
 
                 int mDeviceVID = mUsbDevice.getVendorId();
@@ -213,10 +209,6 @@ public class UsbComm implements IComm{
 //        filter.addAction(ACTION_USB_DETACHED);
 //        filter.addAction(ACTION_USB_ATTACHED);
         mContext.registerReceiver(mUsbReceiver, filter);
-    }
-
-    public void AddInvalidDevice(String deviceName) {
-        mInvalidDevices.add(deviceName);
     }
 
     public String getConnectedDevice() {

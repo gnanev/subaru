@@ -26,3 +26,12 @@ dependencies {
     implementation files('libs/androidautowire.jar')
     api 'com.google.guava:guava:24.1-android'
 }
+
+allprojects { // Projects
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.encoding = 'UTF-8'
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
+}

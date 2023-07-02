@@ -31,9 +31,6 @@
 
         </activity>
 
-        <activity android:name=".KeyPadActivity">
-        </activity>
-
         <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true" android:permission="android.permission.RECEIVE_BOOT_COMPLETED" >            <intent-filter>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
@@ -42,16 +39,6 @@
                 <action android:name="android.intent.action.SCREEN_ON" />
                 <action android:name="android.intent.action.REBOOT"/>
             </intent-filter>
-        </receiver>
-
-        <receiver android:name=".SubaruWidget">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/subaru_widget_info" />
         </receiver>
 
     </application>

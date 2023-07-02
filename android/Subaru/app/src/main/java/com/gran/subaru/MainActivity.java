@@ -51,9 +51,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     private TextView mTextView;
     private Messenger mMessenger = null;
     private boolean mIsBound = false;
-    private ImageButton mBtnLock;
-    private ImageButton mBtnChangePass;
-    private ImageButton mBtnRemoveProtection;
     private ImageButton mBtnDRL;
     private ImageButton mBtnDimmer;
 
@@ -63,7 +60,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     private EditText mEditTextILLMax;
 
     private EditText mEditTextBattMin;
-    private EditText mEditTextCutoff;
     private EditText mEditTextHLon;
     private EditText mEditTextHLoff;
 
@@ -123,7 +119,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         mEditTextILLMax = (EditText)findViewById(R.id.editTextILLMax);
 
         mEditTextBattMin = (EditText)findViewById(R.id.editTextBattMin);
-        mEditTextCutoff = (EditText)findViewById(R.id.editTextCutoff);
         mEditTextHLon = (EditText)findViewById(R.id.editTextHLon);
         mEditTextHLoff = (EditText)findViewById(R.id.editTextHLoff);
 
@@ -145,34 +140,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
             @Override
             public void onClick(View view) {
                 saveConfig();
-            }
-        });
-
-
-        mBtnLock = (ImageButton)findViewById(R.id.btnLock);
-        mBtnLock.setBackgroundResource(R.drawable.selector_btn_unlocked);
-        mBtnLock.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                lockUnlock();
-            }
-        });
-
-        mBtnChangePass = (ImageButton)findViewById(R.id.btnChangePass);
-        mBtnChangePass.setVisibility(View.GONE);
-        mBtnChangePass.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onChangeAccessCode();
-            }
-        });
-
-        mBtnRemoveProtection = (ImageButton)findViewById(R.id.btnUnlock);
-        mBtnRemoveProtection.setVisibility(View.GONE);
-        mBtnRemoveProtection.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onSetProtection();
             }
         });
 
@@ -261,15 +228,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
                 if (Settings.canDrawOverlays(this))
                     InitDimmer();
                 break;
-
-            case ACCESS_CODE_CHANGED:
-                onAccessCodeChanged(resultCode);
-                break;
-
-            case SUBARU_UNLOCKED:
-                if (resultCode == Activity.RESULT_OK)
-                    onSubaruUnlocked();
-                break;
         }
     }
 
@@ -346,7 +304,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         deviceConfig = mBoard.getDeviceConfig();
 
         mEditTextBattMin.setText(Integer.toString(deviceConfig.minVoltage));
-        mEditTextCutoff.setText(Integer.toString(deviceConfig.cutOffThreshold));
         mEditTextHLon.setText(Integer.toString(deviceConfig.lightsOnThreshold));
         mEditTextHLoff.setText(Integer.toString(deviceConfig.lightsOffThreshold));
 
@@ -377,31 +334,8 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     }
 
     void refreshButtons() {
-        mBtnLock.setBackgroundResource(mIsLocked ? R.drawable.selector_btn_locked : R.drawable.selector_btn_unlocked);
         mBtnDRL.setBackgroundResource(mIsDrlOn ? R.drawable.selector_btn_drl_on : R.drawable.selector_btn_drl);
         mBtnDimmer.setBackgroundResource(mIsDimmerOn ? R.drawable.selector_btn_dimmer : R.drawable.selector_btn_dimmer_off);
-        mBtnChangePass.setVisibility(mIsLocked ? View.GONE : View.VISIBLE);
-        mBtnRemoveProtection.setVisibility(mIsLocked ? View.GONE : View.VISIBLE);
-        if (mBoard.getDeviceConfig().protectionEnabled == 0)
-            mBtnRemoveProtection.setBackgroundResource(R.drawable.selector_btn_protect);
-        else
-            mBtnRemoveProtection.setBackgroundResource(R.drawable.selector_btn_unprotect);
-    }
-
-    void lockUnlock() {
-        if (!mIsLocked) {
-            mBoard.setLock(true);
-            return;
-        }
-
-        onEnterAccessCode();
-    }
-
-    void onSetProtection() {
-        int prot = mBoard.getDeviceConfig().protectionEnabled;
-        prot = prot == 0 ? 1 : 0;
-        mBoard.getDeviceConfig().protectionEnabled = prot;
-        saveConfig();
     }
 
     void onSetDrl() {
@@ -417,30 +351,7 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         e.apply();
         e.commit();
         refreshButtons();
-    }
-
-    void onEnterAccessCode() {
-        Intent intent = new Intent(this, KeyPadActivity.class);
-        intent.putExtra(KeyPadActivity.ACTION, KeyPadActivity.ACTION_UNCLOCK);
-        startActivityForResult(intent, SUBARU_UNLOCKED);
-    }
-
-    void onChangeAccessCode() {
-        Intent intent = new Intent(this, KeyPadActivity.class);
-        intent.putExtra(KeyPadActivity.ACTION, KeyPadActivity.ACTION_ACCESS_CODE_CHANGE);
-        startActivityForResult(intent, ACCESS_CODE_CHANGED);
-    }
-
-    void onAccessCodeChanged(int code) {
-        mBoard.setConfig();
-    }
-
-    void onSubaruUnlocked() {
-        mBoard.setLock(false);
-        if (mFirstUnlocked) {
-            mFirstUnlocked = false;
-            goHome();
-        }
+        sendMessageToService(DimmerService.MSG_SET_ALPHA, 111);
     }
 
     void setIll(int val) {
@@ -524,7 +435,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         mBoard.getDeviceConfig().lightsOnThreshold = on;
         mBoard.getDeviceConfig().lightsOffThreshold = off;
         mBoard.getDeviceConfig().minVoltage = str2int(mEditTextBattMin.getText().toString());
-        mBoard.getDeviceConfig().cutOffThreshold = str2int(mEditTextCutoff.getText().toString());
 
         mBoard.setConfig();
 

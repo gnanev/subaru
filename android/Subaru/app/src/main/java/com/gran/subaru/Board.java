@@ -36,16 +36,13 @@ public class Board implements IDataReceiver {
     public static final int CMD_SET_LOCK = 18;
     public static final int CMD_SET_DRL = 19;
 
-    public static final int VALIDATION_RETRY_COUNT = 5;
-
     private Protocol mProtocol;
     private UsbComm mComm;
     private Context mContext;
     private static int empty[] = new int[0];
     private boolean mIsRunning;
-    private boolean mDeviceValidated;
     private int mCurrentCommand = 0;
-    private BlockingQueue mCommandsQueue = new ArrayBlockingQueue(MAX_COMMANDS);
+    private BlockingQueue<Runnable> mCommandsQueue = new ArrayBlockingQueue<Runnable>(MAX_COMMANDS);
 
     private IBoardEventsReceiver mEventsReceiver;
 
@@ -79,12 +76,10 @@ public class Board implements IDataReceiver {
     ArrayList<Runnable> mCommands;
 
     public class DeviceConfig {
-        public static final int SIZE = 5;
-        public int protectionEnabled;
+        public static final int SIZE = 3;
         public int minVoltage;
         public int lightsOnThreshold;
         public int lightsOffThreshold;
-        public int cutOffThreshold;
     }
 
     private DeviceConfig mDeviceConfig = new DeviceConfig();
@@ -141,7 +136,6 @@ public class Board implements IDataReceiver {
 
     private void initThreads() {
         mIsRunning = true;
-        mDeviceValidated = false;
 
         new Thread(new Runnable() {
             @Override
@@ -181,43 +175,7 @@ public class Board implements IDataReceiver {
 
     @Override
     public void onDeviceReady() {
-        mDeviceValidated = false;
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-            try {
-                Thread.sleep(2000); // needed for usb comm to settle
-
-                // Validate device
-                for(int i=0; i<VALIDATION_RETRY_COUNT; i++) {
-                    getConfig();
-                    Thread.sleep(1000);
-                    if (mDeviceValidated)
-                        break;
-                }
-
-                // if device is not validated for 5 sec
-                // search for another one
-                if (!mDeviceValidated) {
-                    String deviceToIgnore = mComm.getConnectedDevice();
-                    mComm.AddInvalidDevice(deviceToIgnore);
-                    mComm.Reconnect();
-                }
-                else if (mEventsReceiver != null){
-                    // device is validated, inform host
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                        mEventsReceiver.onDeviceReady();
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            }
-        }).start();
+        mEventsReceiver.onDeviceReady();
     }
 
     @Override
@@ -284,11 +242,9 @@ public class Board implements IDataReceiver {
             @Override
             public void run() {
                 int a[] = new int[DeviceConfig.SIZE];
-                a[0] = mDeviceConfig.protectionEnabled;
-                a[1] = mDeviceConfig.minVoltage;
-                a[2] = mDeviceConfig.lightsOnThreshold;
-                a[3] = mDeviceConfig.lightsOffThreshold;
-                a[4] = mDeviceConfig.cutOffThreshold;
+                a[0] = mDeviceConfig.minVoltage;
+                a[1] = mDeviceConfig.lightsOnThreshold;
+                a[2] = mDeviceConfig.lightsOffThreshold;
                 mProtocol.sendData(Protocol.ADDR_CTRL, CMD_SET_CONFIG, a);
             }
         });
@@ -320,13 +276,9 @@ public class Board implements IDataReceiver {
         if (df.data.length != DeviceConfig.SIZE)
             return;
 
-        mDeviceConfig.protectionEnabled = df.data[0];
-        mDeviceConfig.minVoltage = df.data[1];
-        mDeviceConfig.lightsOnThreshold = df.data[2];
-        mDeviceConfig.lightsOffThreshold = df.data[3];
-        mDeviceConfig.cutOffThreshold = df.data[4];
-
-        mDeviceValidated = true;
+        mDeviceConfig.minVoltage = df.data[0];
+        mDeviceConfig.lightsOnThreshold = df.data[1];
+        mDeviceConfig.lightsOffThreshold = df.data[2];
 
         if (mEventsReceiver == null)
             return;

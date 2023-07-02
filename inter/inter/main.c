@@ -6,17 +6,13 @@
 #include "comm.h"
 #include "adc.h"
 
-#define adcChannelsMonitored 3
+#define adcChannelsMonitored 2
 
 #define ADC_SUNLIGHT 0
-#define ADC_THROTTLE 1
-#define ADC_BATT     2
+#define ADC_BATT     1
 
-#define LOCK_COUNT  300000
-
-#define CUTOFF_PIN		0
 #define DRL_PIN			1
-#define HEADLIGHT_PIN	3
+#define HEADLIGHT_PIN	2
 
 #define LIGHTS_STATE_OFF	0
 #define LIGHTS_STATE_ON		1
@@ -27,7 +23,6 @@
 void init();
 void mainLoop();
 void processData();
-void processCutoff();
 void processLights();
 void processLightsOn();
 void processLightsOff();
@@ -43,23 +38,18 @@ struct DataFrame df;
 
 struct st_deviceConfig
 {
-	BOOL	protectionEnabled;
 	u08		minVoltage;
 	u08		lightsOnThreshold;
 	u08		lightsOffThreshold;
-	u08		cutOffThreshold;
 };
 
 struct st_deviceConfig deviceConfig;
 
-u08 adcBuff[adcChannelsMonitored] = {0, 0, 0};
+u08 adcBuff[adcChannelsMonitored] = {0, 0};
 u08 currentAdcChannel = 0;
-BOOL isLocked = FALSE;
-u32 lockCountdown = 0;
 u08 lightsState = LIGHTS_STATE_OFF;
 u08 prevLightsState = LIGHTS_STATE_OFF;
 BOOL drlForced = FALSE;
-BOOL cutOffEngaged = FALSE;
 u32 sunSamplesCount = 0;
 u32 sunSamplesSum = 0;
 u32 sunSamplesMax = SUN_SAMPLES_START_COUNT;
@@ -85,12 +75,7 @@ void init() {
 	DDRA = 0xFF;
 	DDRC = 0xFF;
 	DDRD = 0xFF;
-		
-	eeprom_read_block(&cutOffEngaged, (void *)sizeof(deviceConfig)+100, 1);
-	
-	isLocked = deviceConfig.protectionEnabled || cutOffEngaged;
-	
-	toggleOutput(CUTOFF_PIN, 0);
+
 	toggleOutput(DRL_PIN, 0);
 	toggleOutput(HEADLIGHT_PIN, 0);
 	
@@ -104,7 +89,6 @@ void mainLoop() {
 			processData();
 		}
 		
-		processCutoff();
 		processLights();
 	}
 }
@@ -125,23 +109,6 @@ void processData() {
 			if (sizeof(deviceConfig) == df.Header.nDataLen) {
 				memcpy((u08*)&deviceConfig, df.Data, sizeof(deviceConfig));
 				writeDeviceConfig();
-			}
-			break;
-			
-		case CMD_GET_LOCK:
-			if (CommIsFree())
-				CommSendData(ADDR_CTRL, ADDR_HEAD_UNIT, CMD_LOCK, 1, (u08*)&isLocked);
-			break;
-			
-		case CMD_SET_LOCK:
-			if (df.Header.nDataLen == 1) {
-				isLocked = df.Data[0];
-				if (!isLocked) {
-					cutOffEngaged = FALSE;
-					eeprom_write_block(&cutOffEngaged, (void *)sizeof(deviceConfig)+100, 1);
-					lockCountdown = 0;
-					toggleOutput(CUTOFF_PIN, FALSE);
-				}
 			}
 			break;
 			
@@ -206,25 +173,6 @@ void toggleOutput(u08 output, BOOL state) {
 				break;
 			}
 	}
-}
-
-void processCutoff() {
-	if (cutOffEngaged) {
-		toggleOutput(CUTOFF_PIN, TRUE);
-		return;
-	}
-	
-	if (lockCountdown > 0) {
-		lockCountdown--;
-		if (lockCountdown == 0) {
-			cutOffEngaged = TRUE;
-			eeprom_write_block(&cutOffEngaged, (void *)sizeof(deviceConfig)+100, 1);
-		}
-		return;	
-	}
-	
-	if (isLocked && (adcBuff[ADC_THROTTLE] > deviceConfig.cutOffThreshold))
-		lockCountdown = LOCK_COUNT;
 }
 
 void processLights() {
@@ -304,13 +252,8 @@ void writeDeviceConfig()
 }
 	
 void setDefaultConfig() {
-	deviceConfig.protectionEnabled = FALSE;
 	deviceConfig.minVoltage = 145;
 	deviceConfig.lightsOnThreshold = 100;
 	deviceConfig.lightsOffThreshold = 200;
-	deviceConfig.cutOffThreshold = 60;
 	writeDeviceConfig();
-	
-	cutOffEngaged = FALSE;
-	eeprom_write_block(&cutOffEngaged, (void *)sizeof(deviceConfig)+100, 1);
 }
