@@ -29,21 +29,42 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+class FirstRunSingleton {
+
+    private static FirstRunSingleton instance;
+    private boolean val;
+
+    public static FirstRunSingleton getInstance() {
+        if (instance == null)
+            instance = new FirstRunSingleton();
+        return instance;
+    }
+
+    private FirstRunSingleton() {
+        val = true;
+    }
+
+    public boolean getValue() {
+        return val;
+    }
+
+    public void setValue(boolean value) {
+        this.val = value;
+    }
+}
 
 public class MainActivity extends BaseActivity implements  IBoardEventsReceiver {
     private final static String TAG = "MainActivity";
 
     private final static int OVERLAY_SETTINGS_PERMISSION = 123;
-    private final static int ACCESS_CODE_CHANGED = 124;
-    private final static int SUBARU_UNLOCKED = 125;
 
     private final static int ADC_SUNLIGHT = 0;
-    private final static int ADC_THROTTLE = 1;
-    private final static int ADC_BATT     = 2;
+    private final static int ADC_BATT     = 1;
 
-    private final static int ADC_SUN_OVERSAMPLE = 2;
+    private final static int ADC_SUN_OVERSAMPLE = 20;
 
-    private final static float V_FRACTION = 0.082f;
+    private final static float V_FRACTION_BATT = 0.08f;
+    private final static float V_FRACTION_SUN =  0.0195f;
 
     private final static String SHARED_PREFS_NAME = "Subaru_int_settings";
 
@@ -62,6 +83,7 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     private EditText mEditTextBattMin;
     private EditText mEditTextHLon;
     private EditText mEditTextHLoff;
+    private EditText mEditTextHLTime;
 
     private int mAdcMin;
     private int mAdcMax;
@@ -72,11 +94,10 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     private float mDimmerFraction;
     private float mBrightnessFraction;
 
-    private boolean mIsLocked = false;
-    private boolean mFirstRun = true;
+    private boolean mHaveGui = false;
     private boolean mButtonsRefreshed = true;
 
-    private boolean mFirstUnlocked = true;
+    private boolean mFirstRun = true;
 
     private boolean mIsDrlOn = false;
 
@@ -88,28 +109,39 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+
+            if ((action != null) && action.equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
+                mBoard.Kill();
+            }
         }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate");
+        super.onCreate(savedInstanceState);
 
-        IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-        registerReceiver(mUsbReceiver, filter);
+        IntentFilter filterDetached = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(mUsbReceiver, filterDetached);
+
+        boolean isFirstRun = FirstRunSingleton.getInstance().getValue();
+        FirstRunSingleton.getInstance().setValue(false);
 
         Intent intent = getIntent();
-        int i = intent.getIntExtra("FromWidget", 0);
-        String action = intent.getAction();
+        boolean isFromBoot = intent.getBooleanExtra(BootReceiver.RUN_FROM_BOOT, false);
+        intent.putExtra(BootReceiver.RUN_FROM_BOOT, false);
 
-        if ((i == 42) || ((action != null) && action.equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))) {
+        if (isFirstRun || isFromBoot) {
             moveTaskToBack(true);
         }
+        else {
+            initGUI();
+        }
 
-        super.onCreate(savedInstanceState);
+        Init();
+    }
+
+    void initGUI() {
         setContentView(R.layout.activity_main);
-
-        mFirstRun = this.getIntent().getBooleanExtra(BootReceiver.RUN_FROM_BOOT, false);
 
         mTextView = (TextView)findViewById(R.id.textView);
 
@@ -121,6 +153,7 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         mEditTextBattMin = (EditText)findViewById(R.id.editTextBattMin);
         mEditTextHLon = (EditText)findViewById(R.id.editTextHLon);
         mEditTextHLoff = (EditText)findViewById(R.id.editTextHLoff);
+        mEditTextHLTime = (EditText)findViewById(R.id.editTextHLTime);
 
         mEditTextAdcMin.clearFocus();
         mEditTextAdcMax.clearFocus();
@@ -161,18 +194,20 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
 
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
-        Init();
+        mHaveGui = true;
+
+        loadIll();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
         if (mBoard != null)
             mBoard.Resume();
 
-        if (mFirstRun) {
-            mFirstRun = false;
-            moveTaskToBack (true);
+        if (!mHaveGui) {
+            initGUI();
         }
     }
 
@@ -209,7 +244,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
             InitDimmer();
         }
 
-        loadIll();
         InitBoard();
     }
 
@@ -274,6 +308,9 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
 
     @Override
     public void onAdcRefreshed(final int[] values) {
+        if (!mHaveGui)
+            return;
+
         mTextView.post(new Runnable() {
             @Override
             public void run() {
@@ -286,10 +323,10 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
 
                 s += "\n";
 
-                for(int i=2; i<values.length; i++) {
-                    s1 = String.format("%.2f", (float)values[i] * V_FRACTION);
-                    s += "V_" + i + " _____ " + s1 + "\n";
-                }
+                s1 = String.format("%.2f", (float)values[0] * V_FRACTION_SUN);
+                s += "V_1" + " _____ " + s1 + "\n";
+                s1 = String.format("%.2f", (float)values[1] * V_FRACTION_BATT);
+                s += "V_1" + " _____ " + s1 + "\n";
 
                 mTextView.setText(s);
 
@@ -303,29 +340,20 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         Board.DeviceConfig deviceConfig;
         deviceConfig = mBoard.getDeviceConfig();
 
+        if (!mHaveGui)
+            return;
+
         mEditTextBattMin.setText(Integer.toString(deviceConfig.minVoltage));
         mEditTextHLon.setText(Integer.toString(deviceConfig.lightsOnThreshold));
         mEditTextHLoff.setText(Integer.toString(deviceConfig.lightsOffThreshold));
+        mEditTextHLTime.setText(Integer.toString(deviceConfig.lightsTime));
 
         refreshButtons();
     }
 
     @Override
-    public void onLockStatusRefreshed(boolean isLocked) {
-        boolean prevState = mIsLocked;
-        mIsLocked = isLocked;
-
-        if (mButtonsRefreshed) {
-            mButtonsRefreshed = false;
-            refreshButtons();
-        }
-
-        if (prevState != isLocked)
-            refreshButtons();
-    }
-
-    @Override
     public void onDeviceReady() {
+        mBoard.getConfig();
     }
 
     @Override
@@ -334,11 +362,17 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
     }
 
     void refreshButtons() {
+        if (!mHaveGui)
+            return;
+
         mBtnDRL.setBackgroundResource(mIsDrlOn ? R.drawable.selector_btn_drl_on : R.drawable.selector_btn_drl);
         mBtnDimmer.setBackgroundResource(mIsDimmerOn ? R.drawable.selector_btn_dimmer : R.drawable.selector_btn_dimmer_off);
     }
 
     void onSetDrl() {
+        if (!mHaveGui)
+            return;
+
         mIsDrlOn = !mIsDrlOn;
         mBoard.setDrl(mIsDrlOn);
         refreshButtons();
@@ -351,7 +385,6 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         e.apply();
         e.commit();
         refreshButtons();
-        sendMessageToService(DimmerService.MSG_SET_ALPHA, 111);
     }
 
     void setIll(int val) {
@@ -398,12 +431,15 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
 
         mIsDimmerOn = sp.getBoolean("mIsDimmerOn", true);
 
+        calcFractions();
+
+        if (!mHaveGui)
+            return;
+
         mEditTextAdcMin.setText(Integer.toString(mAdcMin));
         mEditTextAdcMax.setText(Integer.toString(mAdcMax));
         mEditTextILLMin.setText(Integer.toString(mILLMin));
         mEditTextILLMax.setText(Integer.toString(mILLMax));
-
-        calcFractions();
     }
 
     void saveIll(){
@@ -435,6 +471,7 @@ public class MainActivity extends BaseActivity implements  IBoardEventsReceiver 
         mBoard.getDeviceConfig().lightsOnThreshold = on;
         mBoard.getDeviceConfig().lightsOffThreshold = off;
         mBoard.getDeviceConfig().minVoltage = str2int(mEditTextBattMin.getText().toString());
+        mBoard.getDeviceConfig().lightsTime = str2int(mEditTextHLTime.getText().toString());
 
         mBoard.setConfig();
 

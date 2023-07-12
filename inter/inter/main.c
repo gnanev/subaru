@@ -11,13 +11,12 @@
 #define ADC_SUNLIGHT 0
 #define ADC_BATT     1
 
+#define HEADLIGHT_PIN	0
 #define DRL_PIN			1
-#define HEADLIGHT_PIN	2
 
 #define LIGHTS_STATE_OFF	0
 #define LIGHTS_STATE_ON		1
 
-#define SUN_SAMPLES_MAX_COUNT 800000
 #define SUN_SAMPLES_START_COUNT 200000
 
 void init();
@@ -41,6 +40,7 @@ struct st_deviceConfig
 	u08		minVoltage;
 	u08		lightsOnThreshold;
 	u08		lightsOffThreshold;
+	u08		lightsTime;
 };
 
 struct st_deviceConfig deviceConfig;
@@ -63,7 +63,7 @@ int main(void)
 }
 
 void init() {
-	//setDefaultConfig();
+//	setDefaultConfig();
 	
 	readDeviceConfig();
 	
@@ -71,10 +71,9 @@ void init() {
 	adc_start(0);
 	
 	CommInit(19200);
-
-	DDRA = 0xFF;
-	DDRC = 0xFF;
-	DDRD = 0xFF;
+	
+	DDRC = 0;
+	DDRB = 0x03;
 
 	toggleOutput(DRL_PIN, 0);
 	toggleOutput(HEADLIGHT_PIN, 0);
@@ -86,7 +85,7 @@ void mainLoop() {
 	while (1)
 	{
 		if(data_GetData(&df)) {
-			processData();
+			processData();	
 		}
 		
 		processLights();
@@ -108,6 +107,7 @@ void processData() {
 		case CMD_SET_CONFIG:
 			if (sizeof(deviceConfig) == df.Header.nDataLen) {
 				memcpy((u08*)&deviceConfig, df.Data, sizeof(deviceConfig));
+				sunSamplesMax = deviceConfig.lightsTime * 100000;
 				writeDeviceConfig();
 			}
 			break;
@@ -143,33 +143,21 @@ void adcCallbackProc(u08 data) {
 void toggleOutput(u08 output, BOOL state) {
 	if (state) {
 		switch (output) {
-			case 0:
-				PORTD |= (1 << PD7);
+			case HEADLIGHT_PIN:
+				PORTB |= (1 << PB0);
 				break;
-			case 1:
-				PORTC |= (1 << PC1);
-				break;
-			case 2:
-				PORTC |= (1 << PC3);
-				break;
-			case 3:
-				PORTC |= (1 << PC5);
+			case DRL_PIN:
+				PORTB |= (1 << PB1);
 				break;
 		}
 	}
 	else {
 		switch (output) {
-			case 0:
-				PORTD &= ~(1 << PD7);
+			case HEADLIGHT_PIN:
+				PORTB &= ~(1 << PB0);
 				break;
-			case 1:
-				PORTC &= ~(1 << PC1);
-				break;
-			case 2:
-				PORTC &= ~(1 << PC3);
-				break;
-			case 3:
-				PORTC &= ~(1 << PC5);
+			case DRL_PIN:
+				PORTB &= ~(1 << PB1);
 				break;
 			}
 	}
@@ -233,7 +221,7 @@ BOOL getSunSample(u08* val) {
 		sunSamplesCount = 0;
 		if (isStartup) {
 			isStartup = FALSE;
-			sunSamplesMax = SUN_SAMPLES_MAX_COUNT;
+			sunSamplesMax = deviceConfig.lightsTime * 100000;
 		}
 		return TRUE;
 	}
@@ -255,5 +243,6 @@ void setDefaultConfig() {
 	deviceConfig.minVoltage = 145;
 	deviceConfig.lightsOnThreshold = 100;
 	deviceConfig.lightsOffThreshold = 200;
+	deviceConfig.lightsTime = 7;
 	writeDeviceConfig();
 }

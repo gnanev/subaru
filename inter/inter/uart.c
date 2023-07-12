@@ -46,12 +46,12 @@ void uartSetTxCallback(voidFunc pNewCallback)
 
 void DummyUartCallback() {}
 
-ISR(USART0_RX_vect)      
+ISR(USART_RX_vect)
 {
 	UartRxCallback();
 }
 
-ISR(USART0_TX_vect)      
+ISR(USART_TX_vect)
 {
 	UartTxCallback();
 }

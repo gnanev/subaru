@@ -31,10 +31,7 @@ public class Board implements IDataReceiver {
     public static final int CMD_GET_CONFIG = 13;
     public static final int CMD_CONFIG = 14;
     public static final int CMD_SET_CONFIG = 15;
-    public static final int CMD_GET_LOCK = 16;
-    public static final int CMD_LOCK = 17;
-    public static final int CMD_SET_LOCK = 18;
-    public static final int CMD_SET_DRL = 19;
+    public static final int CMD_SET_DRL = 16;
 
     private Protocol mProtocol;
     private UsbComm mComm;
@@ -66,20 +63,14 @@ public class Board implements IDataReceiver {
         }
     };
 
-    private Runnable cmdGetLock = new Runnable() {
-        @Override
-        public void run() {
-            mProtocol.sendData(Protocol.ADDR_CTRL, CMD_GET_LOCK, empty);
-        }
-    };
-
     ArrayList<Runnable> mCommands;
 
     public class DeviceConfig {
-        public static final int SIZE = 3;
+        public static final int SIZE = 4;
         public int minVoltage;
         public int lightsOnThreshold;
         public int lightsOffThreshold;
+        public int lightsTime;
     }
 
     private DeviceConfig mDeviceConfig = new DeviceConfig();
@@ -96,7 +87,6 @@ public class Board implements IDataReceiver {
 
         mCommands = new ArrayList<Runnable>(2);
         mCommands.add(cmdGetAdcData);
-        mCommands.add(cmdGetLock);
 
         initCommandProcessors();
 
@@ -110,6 +100,7 @@ public class Board implements IDataReceiver {
     }
 
     public void Kill() {
+        mComm.Disconnect();
         mIsRunning = false;
     }
 
@@ -124,12 +115,6 @@ public class Board implements IDataReceiver {
             @Override
             public void process(Protocol.DataFrame df) {
                 processConfig(df);
-            }
-        });
-        mCommandProcessors.put(CMD_LOCK, new ICommandHandler() {
-            @Override
-            public void process(Protocol.DataFrame df) {
-                processLock(df);
             }
         });
     }
@@ -160,7 +145,7 @@ public class Board implements IDataReceiver {
             }
         }).start();
 
-        new Thread(new Runnable() {
+/*        new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -170,7 +155,7 @@ public class Board implements IDataReceiver {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        }).start();*/
     }
 
     @Override
@@ -245,18 +230,8 @@ public class Board implements IDataReceiver {
                 a[0] = mDeviceConfig.minVoltage;
                 a[1] = mDeviceConfig.lightsOnThreshold;
                 a[2] = mDeviceConfig.lightsOffThreshold;
+                a[3] = mDeviceConfig.lightsTime;
                 mProtocol.sendData(Protocol.ADDR_CTRL, CMD_SET_CONFIG, a);
-            }
-        });
-    }
-
-    public void setLock(final boolean isLocked) {
-        sendCmd(new Runnable() {
-            @Override
-            public void run() {
-                int a[] = new int[1];
-                a[0] = isLocked ? 1 : 0;
-                mProtocol.sendData(Protocol.ADDR_CTRL, CMD_SET_LOCK, a);
             }
         });
     }
@@ -279,6 +254,7 @@ public class Board implements IDataReceiver {
         mDeviceConfig.minVoltage = df.data[0];
         mDeviceConfig.lightsOnThreshold = df.data[1];
         mDeviceConfig.lightsOffThreshold = df.data[2];
+        mDeviceConfig.lightsTime = df.data[3];
 
         if (mEventsReceiver == null)
             return;
@@ -299,19 +275,6 @@ public class Board implements IDataReceiver {
             @Override
             public void run() {
                 mEventsReceiver.onAdcRefreshed(df.data);
-            }
-        });
-    }
-
-
-    private void processLock(final Protocol.DataFrame df) {
-        if ((mEventsReceiver == null) || (df.data.length != 1))
-            return;
-
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                mEventsReceiver.onLockStatusRefreshed(df.data[0]==1);
             }
         });
     }

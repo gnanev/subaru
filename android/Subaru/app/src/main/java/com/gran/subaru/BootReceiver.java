@@ -11,7 +11,7 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        Toast.makeText(context, "!!! BOOT !!!", Toast.LENGTH_LONG).show();
+        //Toast.makeText(context, "!!! BOOT !!!", Toast.LENGTH_LONG).show();
 
         Intent i = new Intent(context, MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

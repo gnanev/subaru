@@ -9,8 +9,9 @@
     tools:context="com.gran.subaru.MainActivity">
 
     <RelativeLayout
-        android:layout_width="1032dp"
-        android:layout_height="582dp"
+        android:layout_width="1024dp"
+        android:layout_height="600dp"
+        android:layout_marginTop="34dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_editor_absoluteX="0dp">
@@ -58,7 +59,7 @@
                 android:layout_marginStart="30dp"
                 android:layout_marginTop="40dp"
                 android:text="ADC min"
-                android:textAlignment="center"
+                android:textAlignment="viewStart"
                 android:textColor="@android:color/white"
                 android:textSize="22sp" />
 
@@ -68,9 +69,9 @@
                 android:layout_height="wrap_content"
                 android:layout_alignTop="@+id/textView1"
                 android:layout_alignParentEnd="true"
-                android:layout_marginEnd="30dp"
+                android:layout_marginEnd="60dp"
                 android:text="ADC max"
-                android:textAlignment="center"
+                android:textAlignment="viewStart"
                 android:textColor="@android:color/white"
                 android:textSize="22sp" />
 
@@ -82,7 +83,7 @@
                 android:layout_marginStart="30dp"
                 android:layout_marginTop="140dp"
                 android:text="ILL min"
-                android:textAlignment="center"
+                android:textAlignment="viewStart"
                 android:textColor="@android:color/white"
                 android:textSize="22sp" />
 
@@ -92,9 +93,9 @@
                 android:layout_height="wrap_content"
                 android:layout_alignTop="@+id/textView3"
                 android:layout_alignParentEnd="true"
-                android:layout_marginEnd="40dp"
+                android:layout_marginEnd="70dp"
                 android:text="ILL max"
-                android:textAlignment="center"
+                android:textAlignment="viewStart"
                 android:textColor="@android:color/white"
                 android:textSize="22sp" />
 
@@ -201,7 +202,21 @@
                 android:layout_marginStart="30dp"
                 android:layout_marginTop="40dp"
                 android:text="Batt min"
-                android:textAlignment="center"
+                android:textAlignment="viewStart"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textView_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="60dp"
+                android:text="HL Time"
+                android:textAlignment="viewStart"
                 android:textColor="@android:color/white"
                 android:textSize="22sp" />
 
@@ -213,7 +228,7 @@
                 android:layout_marginStart="30dp"
                 android:layout_marginTop="140dp"
                 android:text="HL On"
-                android:textAlignment="center"
+                android:textAlignment="viewStart"
                 android:textColor="@android:color/white"
                 android:textSize="22sp" />
 
@@ -223,9 +238,9 @@
                 android:layout_height="wrap_content"
                 android:layout_alignTop="@+id/textView_3"
                 android:layout_alignParentEnd="true"
-                android:layout_marginEnd="40dp"
+                android:layout_marginEnd="80dp"
                 android:text="HL Off"
-                android:textAlignment="center"
+                android:textAlignment="viewStart"
                 android:textColor="@android:color/white"
                 android:textSize="22sp" />
 
@@ -236,6 +251,22 @@
                 android:layout_alignTop="@+id/textView_1"
                 android:layout_marginStart="24dp"
                 android:layout_marginTop="40dp"
+                android:background="@color/adc_background"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                android:text=""
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/editTextHLTime"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/textView_2"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="30dp"
                 android:background="@color/adc_background"
                 android:inputType="numberDecimal"
                 android:maxLines="1"

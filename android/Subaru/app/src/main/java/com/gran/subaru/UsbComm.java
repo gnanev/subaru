@@ -109,13 +109,13 @@ public class UsbComm implements IComm{
 
                 String productName = mUsbDevice.getProductName();
 
-                if (!mDeviceToConnect.isEmpty() && !productName.equals(mDeviceToConnect))
+                if (!productName.isEmpty() && !productName.equals(mDeviceToConnect))
                     continue;
 
                 int mDeviceVID = mUsbDevice.getVendorId();
                 int mDevicePID = mUsbDevice.getProductId();
 
-                if (mDeviceVID != 0x1d6b && (mDevicePID != 0x0001 && mDevicePID != 0x0002 && mDevicePID != 0x0003)) {
+                if (mDeviceVID == 4292 && mDevicePID == 60000) {
                     requestUserPermission();
                     found = true;
                 } else {
@@ -139,8 +139,20 @@ public class UsbComm implements IComm{
             showToast("USB Device not set");
             return;
         }
+
+        if (mSerialPort != null) {
+            mSerialPort.syncClose();
+            mSerialPort = null;
+        }
+
+        if (mConnection != null) {
+            mConnection.close();
+            mConnection = null;
+        }
+
         mConnection = mUsbManager.openDevice(mUsbDevice);
         mSerialPort = UsbSerialDevice.createUsbSerialDevice(mUsbDevice, mConnection);
+
         if (mSerialPort != null) {
             if (mSerialPort.syncOpen()) {
                 mSerialPort.setBaudRate(BAUD_RATE);
@@ -209,13 +221,6 @@ public class UsbComm implements IComm{
 //        filter.addAction(ACTION_USB_DETACHED);
 //        filter.addAction(ACTION_USB_ATTACHED);
         mContext.registerReceiver(mUsbReceiver, filter);
-    }
-
-    public String getConnectedDevice() {
-        if (mUsbDevice == null)
-            return "";
-
-        return mUsbDevice.getDeviceName();
     }
 
     private class ReadThread extends Thread {
