@@ -107,9 +107,9 @@ public class UsbComm implements IComm{
             for (Map.Entry<String, UsbDevice> entry : usbDevices.entrySet()) {
                 mUsbDevice = entry.getValue();
 
-                String productName = mUsbDevice.getProductName();
+                String productName = mUsbDevice.getProductName().trim();
 
-                if (!productName.isEmpty() && !productName.equals(mDeviceToConnect))
+                if (productName.isEmpty() || !productName.equals(mDeviceToConnect))
                     continue;
 
                 int mDeviceVID = mUsbDevice.getVendorId();
